@@ -120,23 +120,43 @@ let globalRevealLevel = 1;
 
 function parsePoem(text) {
   const stanzaBlocks = text.trim().split(/\n\n+/);
+  
   return stanzaBlocks.map(block => {
     const lines = block.split('\n');
+    
     return lines.map(line => {
-      const tokens = line.split(/\s+/).filter(t => t.length > 0);
-      return tokens.map(token => {
-        const m = token.match(/^([^a-zA-Z']*)([a-zA-Z'].*?[a-zA-Z']|[a-zA-Z']?)([^a-zA-Z']*)$/);
-        if (!m) {
-          return { original: token, leading: token, core: '', trailing: '', individualReveal: 0 };
-        }
-        return {
-          original: token,
-          leading: m[1],
-          core: m[2],
-          trailing: m[3],
+      // FIX: Removed ' from the regex. Now it only matches actual letter sequences.
+      // This means "'tis" is split into [separator: "'", word: "tis"]
+      const parts = line.split(/([a-zA-Z]+)/);
+      const tokens = [];
+
+      for (let i = 1; i < parts.length; i += 2) {
+        const word = parts[i];
+        // parts[0] is everything before the first word.
+        // parts[i+1] is everything between the current word and the next word.
+        const leading = (i === 1) ? parts[0] : ''; 
+        const trailing = parts[i + 1] || '';
+        
+        tokens.push({
+          original: leading + word + trailing,
+          leading: leading,
+          core: word,
+          trailing: trailing,
           individualReveal: 0
-        };
-      });
+        });
+      }
+
+      if (tokens.length === 0 && line.trim().length > 0) {
+        tokens.push({
+          original: line,
+          leading: line,
+          core: '',
+          trailing: '',
+          individualReveal: 0
+        });
+      }
+
+      return tokens;
     });
   });
 }
@@ -167,7 +187,7 @@ function renderPoem() {
       lineEl.className = 'line';
       words.forEach((word, wi) => {
         if (wi > 0) {
-          lineEl.appendChild(document.createTextNode(' '));
+          lineEl.appendChild(document.createTextNode(''));
         }
         const span = document.createElement('span');
         span.className = 'word';
