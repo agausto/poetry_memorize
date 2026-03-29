@@ -105,12 +105,12 @@ button:hover {
     <button id="start-btn">Start memorizing</button>
   </div>
 
-  <div id="memorize-view">
+  <div id="memorize-view" style="display: none;">
     <div id="controls">
       <button id="new-poem-btn">New poem</button>
       <span id="level-indicator">Level: 1</span>
     </div>
-    <div id="instructions">Click a word to reveal more letters. Use ← → arrow keys to adjust all words.</div>
+    <div id="instructions">Click a word to reveal more letters. Use ← → arrow keys to delete/reveal letters.</div>
     <div id="poem-display"></div>
   </div>
 
@@ -141,14 +141,19 @@ function parsePoem(text) {
   });
 }
 
+/**
+ * UPDATED: This function now simply slices the word 
+ * without appending underscores for the remainder.
+ */
 function getDisplayText(word) {
   if (word.core === '') {
     return word.original;
   }
   const effective = Math.max(globalRevealLevel, word.individualReveal);
   const shown = word.core.slice(0, effective);
-  const hidden = '_'.repeat(Math.max(0, word.core.length - effective));
-  return word.leading + shown + hidden + word.trailing;
+  
+  // We no longer calculate a "hidden" string of underscores.
+  return word.leading + shown + word.trailing;
 }
 
 function renderPoem() {
@@ -229,7 +234,7 @@ document.addEventListener('keydown', e => {
     updateAllSpans();
   } else if (e.key === 'ArrowLeft') {
     e.preventDefault();
-    globalRevealLevel = Math.max(1, globalRevealLevel - 1);
+    globalRevealLevel = Math.max(0, globalRevealLevel - 1); // Allowed level 0 for total deletion
     updateAllSpans();
   }
 });
