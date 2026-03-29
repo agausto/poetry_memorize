@@ -108,6 +108,7 @@ button:hover {
   <div id="memorize-view" style="display: none;">
     <div id="controls">
       <button id="new-poem-btn">New poem</button>
+      <button id="reset-indiv">Reset Individual Reveal</button>
       <span id="level-indicator">Level: 1</span>
     </div>
     <div id="instructions">Click a word to reveal more letters. Use ← → arrow keys to delete/reveal letters.</div>
@@ -230,9 +231,50 @@ function resetToInput() {
   document.getElementById('memorize-view').style.display = 'none';
   document.getElementById('input-view').style.display = 'block';
 }
+function updateLevelIndicator() {
+  const levelSpan = document.getElementById('level-indicator');
+  if (levelSpan) levelSpan.textContent = `Level: ${globalRevealLevel}`;
+}
+
+function updateSpanElement(span) {
+  const si = parseInt(span.dataset.stanza, 10);
+  const li = parseInt(span.dataset.line, 10);
+  const wi = parseInt(span.dataset.word, 10);
+  if (stanzas[si] && stanzas[si][li] && stanzas[si][li][wi]) {
+    span.textContent = getDisplayText(stanzas[si][li][wi]);
+  }
+}
+function refreshAllSpans() {
+  const allWordSpans = document.querySelectorAll('#poem-display .word');
+  allWordSpans.forEach(span => updateSpanElement(span));
+  updateLevelIndicator();
+}
+function resetIndividualReveals() {
+  if (!stanzas.length) return;
+  
+  // iterate through all tokens and set individualReveal = 0
+  for (let s = 0; s < stanzas.length; s++) {
+    const lines = stanzas[s];
+    for (let l = 0; l < lines.length; l++) {
+      const tokens = lines[l];
+      for (let w = 0; w < tokens.length; w++) {
+        const token = tokens[w];
+        if (token.core !== '') {
+          token.individualReveal = 0;
+        } else {
+          // non-word token: keep 0 anyway
+          token.individualReveal = 0;
+        }
+      }
+    }
+  }
+  // after resetting all individual reveals, re-render all spans (preserve global level)
+  refreshAllSpans();
+}
 
 document.getElementById('start-btn').addEventListener('click', startMemorizing);
 document.getElementById('new-poem-btn').addEventListener('click', resetToInput);
+document.getElementById('reset-indiv').addEventListener('click', resetIndividualReveals);
 
 document.getElementById('poem-display').addEventListener('click', e => {
   const span = e.target.closest('.word');
