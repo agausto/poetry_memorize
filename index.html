@@ -102,6 +102,8 @@ button:hover {
     <h1>Poetry memorizer</h1>
     <textarea id="poem-input" placeholder="Paste your poem here..."></textarea>
     <br>
+    <input type="file" id="file-input" accept=".txt" style="display: none;">
+    <button id="load-file-btn">Load file</button>
     <button id="start-btn">Start memorizing</button>
   </div>
 
@@ -271,6 +273,20 @@ function resetIndividualReveals() {
   // after resetting all individual reveals, re-render all spans (preserve global level)
   refreshAllSpans();
 }
+
+document.getElementById('load-file-btn').addEventListener('click', () => {
+  document.getElementById('file-input').click();
+});
+
+document.getElementById('file-input').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('poem-input').value = ev.target.result;
+  };
+  reader.readAsText(file);
+});
 
 document.getElementById('start-btn').addEventListener('click', startMemorizing);
 document.getElementById('new-poem-btn').addEventListener('click', resetToInput);
